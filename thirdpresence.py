@@ -70,7 +70,7 @@ class Thirdpresence(object):
         self.protocol = protocol
         self.forced_version = forced_version
 
-    def _make_req(self, action, params, data=None):
+    def _make_req(self, action, params=None, data=None):
         '''Makes a HTTP request into the ThirdPresence API.
         '''
         assert action in ACTIONS, "Invalid action: {0}".format(action)
@@ -109,13 +109,9 @@ class Thirdpresence(object):
         elif data:
             assert False, "Invalid data given of type: {0}".format(type(data))
 
-        print "Making HTTP request into URL: {0}".format(the_url)
-        print "Using request params:\n{0}\n".format(params)
-        print "Using request data:\n{0}\n".format(request_data)
         r = func(the_url, params=params, headers=headers, data=request_data)
-        print "RESPONSE:", r.status_code, r.reason, r.headers, r.json, "\n"
-        print "REQUEST HEADERS:", r.request.headers, "\n"
 
+        # pylint: disable-msg=E1103
         self._validate_status(r.status_code, r.reason, r.json)
         return r.status_code, r.reason, r.headers, r.json
 
@@ -165,7 +161,6 @@ class Thirdpresence(object):
             assert False, "Give either {0} or {1}".format(param1, param2)
         return params
 
-    # TODO: sortOrder parameter missing, no example of it in API
     def get_videos(self, item_count=0):
         '''Gets the latest videos of an account.
 
@@ -189,7 +184,6 @@ class Thirdpresence(object):
         _, _, _, json_data = self._make_req("getVideoById", params)
         return json_data
 
-    # TODO: sortOrder parameter missing, no example of it in API
     def get_videos_by_desc(self, text):
         '''Gets a list of metadata if the given text appears in
         the video description.
@@ -358,7 +352,6 @@ class Thirdpresence(object):
         @param video_id: The ID of a video object.
         @param content_auth_token: Authentication token as a string.
         @param provider_id: The ID of a provider for a video.
-        @return TODO: what is returned?
         '''
         assert isinstance(content_auth_token, types.StringTypes) \
                    and len(content_auth_token) < 256, \
@@ -375,7 +368,6 @@ class Thirdpresence(object):
         @param video_id: The ID of a video object.
         @param content_auth_token: Authentication token as a string.
         @param provider_id: The ID of a provider for a video.
-        @return TODO: what is returned?
         '''
         assert isinstance(content_auth_token, types.StringTypes) \
                    and len(content_auth_token) < 256, \
@@ -408,7 +400,6 @@ class Thirdpresence(object):
         }
 
         @param video_metadata: A dictionary with the video metadata.
-        @return TODO: what is returned?
         '''
         _, _, _, json_data = \
                 self._make_req("stitchVideos", None, video_metadata)
