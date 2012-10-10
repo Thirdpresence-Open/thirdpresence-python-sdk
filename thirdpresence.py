@@ -55,7 +55,8 @@ class Thirdpresence(object):
     http://wiki.thirdpresence.com/index.php/API_Reference
     """
     def __init__(self, auth_token, host="api.thirdpresence.com",
-                 protocol="http", forced_version=None):
+                 protocol="http", forced_version=None,
+                 path_prefix=None, logger=None):
         """
         @param auth_token: You get the auth_token after registering with
                            the service. Used for authentication.
@@ -64,11 +65,17 @@ class Thirdpresence(object):
                          Set it to 'https' if you want to use TLS.
         @param forced_version: Set this to a version number, if you want
                                to make all API calls through single API version.
+        @param path_prefix: Additional path part to be added after URL host part
+                            for every made request.
+        @param logger: Logging Logger instance with methods like debug and info.
+                       Pass logger instance for verbose output.
         """
         self.auth_token = auth_token
         self.host = host
         self.protocol = protocol
         self.forced_version = forced_version
+        self.path_prefix = path_prefix
+        self.logger = logger
 
     def _make_req(self, action, params=None, data=None):
         '''Makes a HTTP request into the ThirdPresence API.
@@ -91,7 +98,10 @@ class Thirdpresence(object):
             assert False, \
                 "Invalid HTTP method in actions table: {0}".format(method)
 
-        the_path = "{0}/{1}".format(version, namespace)
+        the_path = ""
+        if self.path_prefix:
+            the_path += self.path_prefix.strip("/") + "/"
+        the_path += "{0}/{1}".format(version, namespace)
         the_url = "{0}://{1}/{2}/".format(self.protocol, self.host, the_path)
 
         params["Action"] = action
@@ -109,9 +119,20 @@ class Thirdpresence(object):
         elif data:
             assert False, "Invalid data given of type: {0}".format(type(data))
 
+        if self.logger:
+            data_len = 0
+            if request_data:
+                data_len = len(request_data)
+            self.logger.info("Making request: {0} {1} params={2} headers={3} data_len={4}".format(
+                                 method, the_url, params, headers, data_len))
+
         r = func(the_url, params=params, headers=headers, data=request_data)
 
         # pylint: disable-msg=E1103
+        if self.logger:
+            self.logger.info("Response: status_code={0}, reason={1}, headers={2}, json_data=\n{3}".format(
+                                 r.status_code, r.reason, r.headers, r.json))
+
         self._validate_status(r.status_code, r.reason, r.json)
         return r.status_code, r.reason, r.headers, r.json
 
