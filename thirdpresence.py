@@ -128,13 +128,17 @@ class Thirdpresence(object):
 
         r = func(the_url, params=params, headers=headers, data=request_data)
 
+        if callable(r.json):
+            the_json_data = r.json()
+        else:
+            the_json_data = r.json
+
         # pylint: disable-msg=E1103
         if self.logger:
             self.logger.info("Response: status_code={0}, reason={1}, headers={2}, json_data=\n{3}".format(
-                                 r.status_code, r.reason, r.headers, r.json))
-
-        self._validate_status(r.status_code, r.reason, r.json)
-        return r.status_code, r.reason, r.headers, r.json
+                                 r.status_code, r.reason, r.headers, the_json_data))
+        self._validate_status(r.status_code, r.reason, the_json_data)
+        return r.status_code, r.reason, r.headers, the_json_data
 
     def _validate_status(self, status_code, reason=None, json_data=None):
         '''Checks the HTTP status code and throws an exception if
