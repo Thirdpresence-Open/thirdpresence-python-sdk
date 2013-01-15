@@ -45,6 +45,9 @@ ACTIONS = {
     "addToken": ["GET", "auth", "04-10"],
     "removeToken": ["GET", "auth", "04-10"],
 
+    "createNewAccount": ["GET", "account", "05-10"],
+    "getSubaccounts": ["GET", "account", "05-10"],
+
     "stitchVideos": ["POST", "ads", "06-11"],
 }
 
@@ -128,12 +131,12 @@ class Thirdpresence(object):
 
         r = func(the_url, params=params, headers=headers, data=request_data)
 
+        # pylint: disable-msg=E1103
         if callable(r.json):
             the_json_data = r.json()
         else:
             the_json_data = r.json
 
-        # pylint: disable-msg=E1103
         if self.logger:
             self.logger.info("Response: status_code={0}, reason={1}, headers={2}, json_data=\n{3}".format(
                                  r.status_code, r.reason, r.headers, the_json_data))
@@ -428,6 +431,37 @@ class Thirdpresence(object):
         '''
         _, _, _, json_data = \
                 self._make_req("stitchVideos", None, video_metadata)
+        return json_data
+
+    def create_new_sub_account(self, account_name, password, callback=None):
+        '''Creates a new sub-account for a reseller account.
+        
+        Created name for new account will be the reseller account prefixed
+        by the new given account name.
+        
+        @param account_name: The name for the new sub-account.
+        @param password: Password for the new account console and statistics.
+        @param callback: Callback URL to be called when a new updated video
+                         for the account becomes available.
+        @return: Newly created account metadata in JSON format.
+        '''
+        assert isinstance(account_name, types.StringTypes) \
+                   and len(account_name) > 2, \
+               "Invalid account name: {0}".format(str(account_name))
+        assert isinstance(password, types.StringTypes) \
+                   and len(password) > 5, \
+               "Invalid password (must be at least 6 characters): {0}".format(str(password))
+        params = {"accountname": account_name, "password": password}
+        if callback:
+            params["callback"] = str(callback)
+        _, _, _, json_data = self._make_req("createNewAccount", params)
+        return json_data
+
+    def list_sub_accounts(self):
+        '''List existing sub-accounts for a reseller account.
+        @return: A list of reseller sub-accounts in JSON format.
+        '''
+        _, _, _, json_data = self._make_req("getSubaccounts")
         return json_data
 
 

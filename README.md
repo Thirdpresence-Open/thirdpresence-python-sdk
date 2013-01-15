@@ -60,6 +60,18 @@ Getting Help on Module:
      |      @param source_url: Source for the video feed. See the comment above.
      |      @return Added category metadata in JSON format.
      |
+     |  create_new_sub_account(self, account_name, password, callback=None)
+     |      Creates a new sub-account for a reseller account.
+     |      
+     |      Created name for new account will be the reseller account prefixed
+     |      by the new given account name.
+     |      
+     |      @param account_name: The name for the new sub-account.
+     |      @param password: Password for the new account console and statistics.
+     |      @param callback: Callback URL to be called when a new updated video
+     |                       for the account becomes available.
+     |      @return: Newly created account metadata in JSON format.
+     |  
      |  delete_category(self, category_id, delete_content, provider_id=None)
      |      Deletes a video category with the given category_id.
      |      If the delete_content is True, then all the content in this
@@ -148,6 +160,10 @@ Getting Help on Module:
      |
      |      @return List of category metadata in JSON format.
      |
+     |  list_sub_accounts(self)
+     |      List existing sub-accounts for a reseller account.
+     |      @return: A list of reseller sub-accounts in JSON format.
+     |  
      |  remove_token(self, video_id, content_auth_token, provider_id=None)
      |      Remove an authorization token for a video.
      |
