@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Copyright 2012 ThirdPresence
+#Copyright 2013 ThirdPresence
 #
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU Lesser General Public License as
@@ -48,7 +48,8 @@ ACTIONS = {
     "createNewAccount": ["GET", "account", "05-10"],
     "getSubaccounts": ["GET", "account", "05-10"],
 
-    "stitchVideos": ["POST", "ads", "06-11"],
+    "stitchVideos": ["POST", "ad", "06-11"],
+    "insertLinearVASTAd": ["POST", "ad", "06-11"],
 }
 
 class Thirdpresence(object):
@@ -111,7 +112,7 @@ class Thirdpresence(object):
         params["authToken"] = self.auth_token
         params["version"] = version
 
-        headers = {}
+        headers = {'User-Agent': 'thirdpresence-python-1.0.1'}
 
         request_data = None
         if data and isinstance(data, (dict, list)):
@@ -133,7 +134,12 @@ class Thirdpresence(object):
 
         # pylint: disable-msg=E1103
         if callable(r.json):
-            the_json_data = r.json()
+            try:
+                the_json_data = r.json()
+            except StandardError, e:
+                if self.logger:
+                    self.logger.warning("Failed decoding JSON: {0}".format(e))
+                raise InternalServerError("Failed decoding server reply: " + str(r.content))
         else:
             the_json_data = r.json
 
@@ -154,9 +160,7 @@ class Thirdpresence(object):
                 internal_error_code = int(json_data["code"])
                 err_message = str(json_data["message"])
                 if internal_error_code not in INTERNAL_ERROR_CODES:
-                    raise ThirdpresenceAPIError("Unknown internal error. "\
-                        "Code {0}. Message:".format(internal_error_code,
-                                                    err_message))
+                    raise ThirdpresenceAPIError("Error code {0}. Message: {1}".format(internal_error_code, err_message))
                 else:
                     exception = INTERNAL_ERROR_CODES[internal_error_code]
                     raise exception("{0}: {1}".format(internal_error_code,
@@ -267,10 +271,9 @@ class Thirdpresence(object):
         {
             "name": "James Sanders provoca",
             "synopsis": False,
-            "position": 0,
             "expiretime": "10.03.2012 02:17:08",
             "description": "Some description",
-            "sourceurl": "http://somehost\/EXAMPLE.mp4",
+            "sourceurl": "http://somehost/EXAMPLE.mp4",
             "categoryid": 1179
         }
 
@@ -409,8 +412,8 @@ class Thirdpresence(object):
     def stitch_videos(self, video_metadata):
         '''Concatenates two videos based on the given metadata.
         Mainly used for adding a preroll advertisement to a video.
-        Notice that the sourceurl and adurl are video_ids already
-        existing in the ThirdPresence service.
+        Notice that the sourceurl and adurl point to video IDs
+        for videos already in the Thirdpresence platform.
 
         You must pass the video metadata as a dictionary and it will
         be encoded as JSON payload into the HTTP request.
@@ -462,6 +465,54 @@ class Thirdpresence(object):
         @return: A list of reseller sub-accounts in JSON format.
         '''
         _, _, _, json_data = self._make_req("getSubaccounts")
+        return json_data
+
+    def insert_linear_vast_ad(self, vast_ad_metadata):
+        '''Inserts a new video into user'a account that will be turned into
+        an advertisement that is available in VAST 3.0 format.
+
+        You can also use existing video items by providing key 'videoid'
+        with a id value pointing to some existing video item on your account.
+
+        See VAST specification at IAB net site: http://www.iab.net/vast
+
+        You can use following keywords that will be replaced if used in URLs:
+        * [TIMESTAMP] will be replaced with the timestamp since epoch in seconds
+        * [AD_ID] will be replaced by the VAST ad id 'adid'
+        * [CREATIVE_ID] will be replaced by the creative id,
+            but not if used in 'impressionurl'.
+
+        Example video metadata dict:
+        {
+            "adid": "my_ad_id_0001",
+            "description": "My first VAST advertisement",
+            "impressionurl": "http://somehost/adserver/tracking/impressions/[AD_ID]?timestamp=[TIMESTAMP]",
+            "trackingevents": {
+                "resume": "http://somehost/adserver/tracking/events/resume/[CREATIVE_ID]?timestamp=[TIMESTAMP]",
+                "start": "http://somehost/adserver/tracking/events/start/[CREATIVE_ID]?timestamp=[TIMESTAMP]",
+                "complete": "http://somehost/adserver/tracking/events/complete/[CREATIVE_ID]?timestamp=[TIMESTAMP]"
+            },
+            "videoclicks": {
+                "clickthrough": "http://somehost/adserver/tracking/clickthrough/[CREATIVE_ID]?timestamp=[TIMESTAMP]&link=http://mylandingsite/",
+            },
+            "releasetime": "2013-03-01T04:00:00Z",
+            "expiretime": "2013-03-31T04:00:00Z",
+            "sourceurl": "http://somehost/EXAMPLE.mp4",
+            "categoryid": 1179
+        }
+
+        Notice that if you use 'videoid' key to use an existing video,
+        then the following keys will be ignored:
+        * releasetime
+        * expiretime
+        * sourceurl
+        * categoryid
+
+        @param vast_ad_metadata: A dictionary with the video and ad metadata.
+        @return The metadata of the added VAST ad in JSON format.
+        '''
+        _, _, _, json_data = \
+                self._make_req("insertLinearVASTAd", None, vast_ad_metadata)
         return json_data
 
 

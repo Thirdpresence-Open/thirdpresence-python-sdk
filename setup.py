@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name='thirdpresence-sdk',
-    version='1.0.1',
+    version='1.0.2',
     description='This client library supports the official ThirdPresence API. '
                 'Use it for implementing Python applications utilizing '
                 'ThirdPresence',
