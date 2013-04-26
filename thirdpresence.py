@@ -32,7 +32,7 @@ ACTIONS = {
     "getVideoById": ["GET", "video", "10-09"],
     "getVideosByDesc": ["GET", "video", "10-09"],
     "getVideosByCategory": ["GET", "video", "10-09"],
-    "getDeliveryStatus": ["GET", "video", "10-09"],
+    "getDeliveryStatus": ["GET", "video", "03-13"],
     "insertVideo": ["POST", "video", "10-09"],
     "deleteVideo": ["GET", "video", "10-09"],
     "updateVideoData": ["POST", "video", "10-09"],
