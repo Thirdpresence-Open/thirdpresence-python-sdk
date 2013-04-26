@@ -49,7 +49,12 @@ ACTIONS = {
     "getSubaccounts": ["GET", "account", "05-10"],
 
     "stitchVideos": ["POST", "ad", "06-11"],
-    "insertLinearVASTAd": ["POST", "ad", "06-11"],
+
+    "insertLinearVASTAd": ["POST", "vast", "03-13"],
+    "updateLinearVASTAd": ["POST", "vast", "03-13"],
+    "deleteLinearVASTAd": ["GET", "vast", "03-13"],
+    "getLinearVASTAdById": ["GET", "vast", "03-13"],
+    "getLinearVASTAds": ["GET", "vast", "03-13"],
 }
 
 class Thirdpresence(object):
@@ -513,6 +518,45 @@ class Thirdpresence(object):
         '''
         _, _, _, json_data = \
                 self._make_req("insertLinearVASTAd", None, vast_ad_metadata)
+        return json_data
+
+    def update_linear_vast_ad(self, vast_ad_metadata):
+        '''Updates an existing VAST advertisement.
+        See example of the VAST ad object structure from method:
+        "insert_linear_vast_ad".
+
+        @param vast_ad_metadata: A dictionary with the ad metadata.
+        @return The metadata of the updated VAST ad in JSON format.
+        '''
+        _, _, _, json_data = \
+                self._make_req("updateLinearVASTAd", None, vast_ad_metadata)
+        return json_data
+
+    def delete_linear_vast_ad(self, adid):
+        '''Deletes an existing VAST advertisement.
+        
+        @param adid: The Ad ID of the VAST ad to be deleted.
+        '''
+        params = {"adid": adid}
+        _, _, _, json_data = self._make_req("deleteLinearVASTAd", params)
+        return json_data
+
+    def get_linear_vast_ad_by_id(self, adid):
+        '''Gets an existing VAST advertisement.
+        
+        @param adid: The Ad ID of the VAST ad to be retrieved.
+        @return The metadata of the retrieved VAST ad in JSON format.
+        '''
+        params = {"adid": adid}
+        _, _, _, json_data = self._make_req("getLinearVASTAdById", params)
+        return json_data
+
+    def get_linear_vast_ads(self):
+        '''Gets all the existing VAST advertisements.
+        
+        @return The metadata of the retrieved VAST ads in JSON format.
+        '''
+        _, _, _, json_data = self._make_req("getLinearVASTAds")
         return json_data
 
 
