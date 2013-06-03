@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-#Copyright 2013 ThirdPresence
+# Copyright 2013 ThirdPresence
 #
-#This program is free software: you can redistribute it and/or modify
-#it under the terms of the GNU Lesser General Public License as
-#published by the Free Software Foundation, either version 3 of the
-#License, or (at your option) any later version.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
 #
-#This program is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#GNU Lesser General Public License for more details:
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Lesser General Public License for more details:
 #
-#<http://www.gnu.org/licenses/>.
+# <http://www.gnu.org/licenses/>.
 '''
 Python client library for the ThirdPresence Platform.
 
@@ -22,9 +22,9 @@ Simple usage example (note that you just need the auth_token):
 > video_metadata_list = tpr.get_videos()
 '''
 
-import types
-import requests # install by: "pip install requests"
 import json
+import requests  # install by: "pip install requests"
+import types
 
 ACTIONS = {
     # ACTION: [HTTP METHOD, URL NAMESPACE, VERSION]
@@ -55,6 +55,12 @@ ACTIONS = {
     "deleteLinearVASTAd": ["GET", "vast", "03-13"],
     "getLinearVASTAdById": ["GET", "vast", "03-13"],
     "getLinearVASTAds": ["GET", "vast", "03-13"],
+
+    "insertVASTCompanionAd": ["POST", "vast", "03-13"],
+    "updateVASTCompanionAd": ["POST", "vast", "03-13"],
+    "deleteVASTCompanionAd": ["GET", "vast", "03-13"],
+    "getVASTCompanionAdById": ["GET", "vast", "03-13"],
+    "getVASTCompanionAds": ["GET", "vast", "03-13"],
 }
 
 class Thirdpresence(object):
@@ -172,7 +178,7 @@ class Thirdpresence(object):
                                                       err_message))
 
             else:
-                pass # HTTP code 2XX, meaning this is OK non-error response.
+                pass  # HTTP code 2XX, meaning this is OK non-error response.
 
         elif status_code == 404:
             raise ResourceNotFoundError(str(reason))
@@ -557,6 +563,75 @@ class Thirdpresence(object):
         @return The metadata of the retrieved VAST ads in JSON format.
         '''
         _, _, _, json_data = self._make_req("getLinearVASTAds")
+        return json_data
+
+    def insert_vast_companion_ad(self, companion_metadata):
+        '''Inserts a new companion ad to user's account for VAST usage.
+
+        See VAST specification at IAB net site: http://www.iab.net/vast
+
+        You can use following keywords that will be replaced if used in URLs:
+        * [TIMESTAMP] will be replaced with the timestamp since epoch in seconds
+        * [COMPANION_ID] will be replaced by the companion id 'companionid'
+
+        Example companion metadata dict:
+        {
+            "companionid": "expanding_banner_0001",
+            "adslotid": "slot_01",
+            "width": 0,
+            "height": 0,
+            "expandedwidth": 300,
+            "expandedheight: 250,
+            "clickthrough": "http://somehost/adserver/tracking/clickthrough/[COMPANION_ID]?timestamp=[TIMESTAMP]&link=http://mylandingsite/",
+            "resources": [
+              {"image/jpg": "http://my.adserver.com/expanded_300x250.jpg"}
+            ]
+        }
+
+        @param companion_metadata: A dictionary with the companion metadata.
+        @return The metadata of the added Companion in JSON format.
+        '''
+        _, _, _, json_data = \
+                self._make_req("insertVASTCompanionAd", None, companion_metadata)
+        return json_data
+
+    def update_vast_companion_ad(self, companion_metadata):
+        '''Updates an existing VAST Companion.
+        See example of the VAST ad object structure from method:
+        "insert_vast_companion_ad".
+
+        @param companion_metadata: A dictionary with the companion metadata.
+        @return The metadata of the updated Companion in JSON format.
+        '''
+        _, _, _, json_data = \
+                self._make_req("updateVASTCompanionAd", None, companion_metadata)
+        return json_data
+
+    def delete_vast_companion_ad(self, companionid):
+        '''Deletes an existing VAST Companion.
+
+        @param companionid: The Companion ID of the VAST companion ad to be deleted.
+        '''
+        params = {"companionid": companionid}
+        _, _, _, json_data = self._make_req("deleteLinearVASTAd", params)
+        return json_data
+
+    def get_vast_companion_ad_by_id(self, companionid):
+        '''Gets an existing VAST Companion.
+
+        @param companionid: The Companion ID of the VAST companion ad to be deleted.
+        @return The metadata of the retrieved Companion in JSON format.
+        '''
+        params = {"companionid": companionid}
+        _, _, _, json_data = self._make_req("getVASTCompanionAdById", params)
+        return json_data
+
+    def get_vast_companion_ads(self):
+        '''Gets all the existing VAST companions.
+
+        @return The metadata of the retrieved companion ads in JSON format.
+        '''
+        _, _, _, json_data = self._make_req("getVASTCompanionAds")
         return json_data
 
 
