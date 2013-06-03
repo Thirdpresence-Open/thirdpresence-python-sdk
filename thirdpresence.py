@@ -613,7 +613,7 @@ class Thirdpresence(object):
         @param companionid: The Companion ID of the VAST companion ad to be deleted.
         '''
         params = {"companionid": companionid}
-        _, _, _, json_data = self._make_req("deleteLinearVASTAd", params)
+        _, _, _, json_data = self._make_req("deleteVASTCompanionAd", params)
         return json_data
 
     def get_vast_companion_ad_by_id(self, companionid):
